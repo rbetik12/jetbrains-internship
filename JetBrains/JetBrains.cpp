@@ -16,6 +16,10 @@ bool IsInputChanged(char* currentBuf, char* prevBuff) {
 }
 
 int main() {
+    FILE* dictionary = fopen("dict.txt", "r");
+    if (!dictionary) {
+        return -1;
+    }
     GLFWwindow* window = InitGLFW();
 
     if (!window) {
@@ -51,7 +55,8 @@ int main() {
         UIEnd(window);
 
         if (IsInputChanged(inputBuffer, inputBufferCopy)) {
-            Search(searchResults, std::string(inputBuffer));
+            searchResults.clear();
+            Search(searchResults, std::string(inputBuffer), dictionary);
         }
 
         glfwSwapBuffers(window);
