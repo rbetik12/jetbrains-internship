@@ -8,6 +8,7 @@
 #include "Utils/Init.h"
 #include "UI/UI.h"
 #include "Utils/Search/Search.h"
+#include "Utils/Threading/TaskScheduler.h"
 
 #define INPUT_BUFFER_SIZE 128
 
@@ -16,7 +17,7 @@ bool IsInputChanged(char* currentBuf, char* prevBuff) {
 }
 
 int main() {
-    FILE* dictionary = fopen("dict.txt", "r");
+    FILE* dictionary = fopen("big-dic.txt", "r");
     if (!dictionary) {
         return -1;
     }
@@ -32,7 +33,8 @@ int main() {
     char* inputBufferCopy = new char[INPUT_BUFFER_SIZE];
     std::vector<std::string> searchResults;
     std::memset(inputBuffer, 0, INPUT_BUFFER_SIZE);
-
+    TaskScheduler scheduler;
+    SchedulerTask task;
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT);
@@ -56,7 +58,12 @@ int main() {
 
         if (IsInputChanged(inputBuffer, inputBufferCopy)) {
             searchResults.clear();
-            Search(searchResults, std::string(inputBuffer), dictionary);
+            task.dictionary = dictionary;
+            task.results = &searchResults;
+            task.stringToSearch = std::string(inputBuffer);
+            if (!task.stringToSearch.empty()) {
+                scheduler.RequestSearch(task);
+            }
         }
 
         glfwSwapBuffers(window);

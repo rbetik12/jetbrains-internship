@@ -1,6 +1,7 @@
 #include "Search.h"
 #include <iostream>
 #include <sstream>
+#include "../Threading/ThreadTask.h"
 
 #define DICT_BLOCK_SIZE 256
 
@@ -48,4 +49,28 @@ void Search(std::vector<std::string>& results, std::string& stringToSearch, FILE
     SearchInBlock(readRes, dictBlock, stringToSearch, results);
 
     delete[] dictBlock;
+}
+
+void MultithreadedSearch(std::vector<std::string>& results, std::string& stringToSearch, FILE* dictionary, ThreadPool& pool) {
+    if (stringToSearch.empty()) return;
+
+    fseek(dictionary, 0, SEEK_SET);
+    char* dictBlock = new char[DICT_BLOCK_SIZE];
+    long long readRes;
+    ThreadTask task;
+
+    while ((readRes = fread(dictBlock, sizeof(char), DICT_BLOCK_SIZE, dictionary)) == DICT_BLOCK_SIZE) {
+        task.block = dictBlock;
+        task.bytesToSearch = DICT_BLOCK_SIZE - 1;
+        task.results = &results;
+        task.stringToSearch = &stringToSearch;
+        pool.AddTask(task);
+        dictBlock = new char[DICT_BLOCK_SIZE];
+    }
+    SearchInBlock(readRes, dictBlock, stringToSearch, results);
+    task.block = dictBlock;
+    task.bytesToSearch = readRes;
+    task.results = &results;
+    task.stringToSearch = &stringToSearch;
+    pool.AddTask(task);
 }
