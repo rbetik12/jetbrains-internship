@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <unordered_set>
 #include "../Threading/ThreadPool.h"
 
 void Search(std::vector<std::string>& results, std::string& stringToSearch, FILE* dictionary);

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 struct ThreadTask {
@@ -7,6 +8,7 @@ struct ThreadTask {
     std::string* stringToSearch; 
     std::vector<std::string>* results;
     char* block;
+    uint64_t blockID;
 };
 
 struct SchedulerTask {
