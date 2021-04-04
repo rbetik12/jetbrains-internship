@@ -4,7 +4,7 @@
 #include <iostream>
 #include "../Search/Search.h"
 
-TaskScheduler::TaskScheduler(): clearTasks(false), searchFinished(true) {
+TaskScheduler::TaskScheduler(): clear(false), searchFinished(true) {
     std::thread* schedulerThread = new std::thread(&TaskScheduler::SchedulerThread, this);
     this->schedulerThread.reset(schedulerThread);
     this->schedulerThread->detach();
@@ -12,30 +12,36 @@ TaskScheduler::TaskScheduler(): clearTasks(false), searchFinished(true) {
 
 void TaskScheduler::RequestSearch(SchedulerTask& task) {
     searchRequests.push_back(task);
-    clearTasks = true;
 }
 
 bool TaskScheduler::IsSearchFinished() {
     return searchFinished;
 }
 
+void TaskScheduler::Clear() {
+    clear = true;
+}
+
 void TaskScheduler::SchedulerThread() {
     while (true) {
-        if (clearTasks) {
-            //pool.ClearTasks();
-            clearTasks = false;
+        if (clear) {
+            clear = false;
+            searcher.StopSearch();
+            searchFinished = true;
         }
-        else if (!searchRequests.empty()) {
+        if (!searchRequests.empty()) {
             SchedulerTask task = searchRequests.front();
             searchRequests.pop_front();
             searchFinished = false;
-            //MultithreadedSearch(*task.results, task.stringToSearch, task.dictionary, pool);
-            Search(*task.results, task.stringToSearch, task.dictionary);
+            searcher.Search(*task.results, task.stringToSearch, task.dictionary);
+            if (clear) {
+                task.results->clear();
+                clear = true;
+            }
             searchFinished = true;
-            std::cout << "Results size: " << task.results->size() << std::endl;
         }
         else {
-            //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
     }
 }

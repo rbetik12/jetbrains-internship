@@ -2,10 +2,14 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
-#include "../Threading/ThreadPool.h"
 
-void Search(std::vector<std::string>& results, std::string& stringToSearch, FILE* dictionary);
-
-void MultithreadedSearch(std::vector<std::string>& results, std::string& stringToSearch, FILE* dictionary, ThreadPool& pool);
-
-bool Contains(std::string str, std::string& stringToSearch);
+class Searcher {
+public:
+    Searcher();
+    void Search(std::vector<std::string>& results, std::string& stringToSearch, FILE* dictionary);
+    void StopSearch();
+private:
+    bool Contains(std::string str, std::string& stringToSearch);
+    void SearchInBlock(int bytesToSearch, char* dictBlock, std::string& stringToSearch, std::vector<std::string>& results);
+    bool stopSearch;
+};

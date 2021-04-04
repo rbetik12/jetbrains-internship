@@ -14,9 +14,24 @@
 
 #define INPUT_BUFFER_SIZE 128
 
+void Search(std::vector<std::string>& searchResults, TaskScheduler& scheduler, FILE* dictionary, int pageNum, const char* inputBuffer) {
+    SchedulerTask task;
+    searchResults.clear();
+    scheduler.Clear();
+    task.dictionary = dictionary;
+    task.results = &searchResults;
+    task.stringToSearch = std::string(inputBuffer);
+    pageNum = 0;
+    if (!task.stringToSearch.empty()) {
+        scheduler.RequestSearch(task);
+    }
+}
+
 bool IsInputChanged(char* currentBuf, char* prevBuff) {
     return std::memcmp(currentBuf, prevBuff, INPUT_BUFFER_SIZE);
 }
+
+bool isEnterPressed = false;
 
 int main() {
     FILE* dictionary = fopen("big-dic.txt", "r");
@@ -29,6 +44,15 @@ int main() {
         return -1;
     }
 
+    glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
+            isEnterPressed = true;
+        }
+        if (key == GLFW_KEY_ENTER && action == GLFW_RELEASE) {
+            isEnterPressed = false;
+        }
+    });
+
     InitImGui(window);
 
     char* inputBuffer = new char[INPUT_BUFFER_SIZE];
@@ -36,44 +60,51 @@ int main() {
     std::vector<std::string> searchResults;
     std::memset(inputBuffer, 0, INPUT_BUFFER_SIZE);
     TaskScheduler scheduler;
-    SchedulerTask task;
     int pageNum = 0;
     const int pageSize = 32;
 
     //TO-DO
     /*
     * 1. Fix UI fleckreing during search
-    * 2. Remove thread pool
-    * 3. Reset search thread correctly
     */
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        std::memcpy(inputBufferCopy, inputBuffer, INPUT_BUFFER_SIZE);
         UIBegin();
         {
-            ImGui::Begin("My First Tool");
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+            int displayW, displayH;
+            glfwGetFramebufferSize(window, &displayW, &displayH);
+            glViewport(0, 0, displayW, displayH);
+            ImGui::SetNextWindowSize(ImVec2(displayW, displayH));
+            ImGui::Begin("Searcher", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove);
             ImGui::InputText("Write here word you want to find", inputBuffer, INPUT_BUFFER_SIZE);
-
-            ImGui::TextColored(ImVec4(1, 1, 0, 1), "Search results");
-            if (searchResults.size() > pageSize) {
-                if (ImGui::Button("Next")) {
-                    if (pageNum + pageSize < searchResults.size()) {
-                        pageNum += pageSize;
-                    }
-                    std::cout << "Page num is " << pageNum << std::endl;
-                }
-                if (ImGui::Button("Prev")) {
-                    if (pageNum - pageSize >= 0) {
-                        pageNum -= pageSize;
-                    }
-                    std::cout << "Page num is " << pageNum << std::endl;
-                }
-                ImGui::Text("Pages: %d/%d", pageNum, searchResults.size() / pageSize);
+            if (ImGui::Button("Search")) {
+                Search(searchResults, scheduler, dictionary, pageNum, inputBuffer);
             }
 
+            if (!scheduler.IsSearchFinished()) {
+                ImGui::TextColored(ImVec4(1, 0, 1, 1), "Search in progress");
+            }
+
+            if (searchResults.size() > pageSize) {
+                if (ImGui::Button("Prev")) {
+                    if (pageNum * pageSize - pageSize >= 0) {
+                        pageNum -= 1;
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Next")) {
+                    if (pageNum * pageSize + pageSize < searchResults.size()) {
+                        pageNum += 1;
+                    }
+                }                
+                ImGui::Text("Page %d/%d", pageNum, searchResults.size() / pageSize);
+            }
+
+            ImGui::TextColored(ImVec4(1, 1, 0, 1), "Search results");
             ImGui::BeginChild("Scrolling");
             if (searchResults.size() <= pageSize) {
                 for (size_t i = 0; i < searchResults.size(); i++) {
@@ -81,7 +112,7 @@ int main() {
                 }
             }
             else {
-                for (size_t i = pageNum; i < pageSize + pageNum; i++) {
+                for (size_t i = pageNum * pageSize; i < pageSize + pageNum * pageSize; i++) {
                     if (i >= searchResults.size()) break;
                     ImGui::TextUnformatted(searchResults[i].c_str());
                 }
@@ -91,17 +122,6 @@ int main() {
             ImGui::End();
         }
         UIEnd(window);
-
-        if (IsInputChanged(inputBuffer, inputBufferCopy)) {
-            searchResults.clear();
-            task.dictionary = dictionary;
-            task.results = &searchResults;
-            task.stringToSearch = std::string(inputBuffer);
-            pageNum = 0;
-            if (!task.stringToSearch.empty()) {
-                scheduler.RequestSearch(task);
-            }
-        }
 
         glfwSwapBuffers(window);
     }
