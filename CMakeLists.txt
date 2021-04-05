@@ -3,6 +3,7 @@
 project ("JetBrains")
 
 add_subdirectory ("DictionaryUI")
+add_subdirectory ("TriangleApp")
 add_subdirectory ("lib/glfw")
 add_subdirectory ("lib/imgui")
 add_subdirectory ("lib/glad")
