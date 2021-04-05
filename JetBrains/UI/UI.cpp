@@ -11,8 +11,5 @@ void UIBegin() {
 
 void UIEnd(GLFWwindow* window) {
     ImGui::Render();
-    int displayW, displayH;
-    glfwGetFramebufferSize(window, &displayW, &displayH);
-    glViewport(0, 0, displayW, displayH);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

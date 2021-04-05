@@ -14,14 +14,21 @@
 
 #define INPUT_BUFFER_SIZE 128
 
-void Search(std::vector<std::string>& searchResults, TaskScheduler& scheduler, FILE* dictionary, int pageNum, const char* inputBuffer) {
+void SetFullscreenUI(GLFWwindow* window) {
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    int displayW, displayH;
+    glfwGetFramebufferSize(window, &displayW, &displayH);
+    glViewport(0, 0, displayW, displayH);
+    ImGui::SetNextWindowSize(ImVec2(displayW, displayH));
+}
+
+void Search(std::vector<std::string>& searchResults, TaskScheduler& scheduler, FILE* dictionary, const char* inputBuffer) {
     SchedulerTask task;
     searchResults.clear();
     scheduler.Clear();
     task.dictionary = dictionary;
     task.results = &searchResults;
     task.stringToSearch = std::string(inputBuffer);
-    pageNum = 0;
     if (!task.stringToSearch.empty()) {
         scheduler.RequestSearch(task);
     }
@@ -56,17 +63,15 @@ int main() {
     InitImGui(window);
 
     char* inputBuffer = new char[INPUT_BUFFER_SIZE];
-    char* inputBufferCopy = new char[INPUT_BUFFER_SIZE];
     std::vector<std::string> searchResults;
     std::memset(inputBuffer, 0, INPUT_BUFFER_SIZE);
     TaskScheduler scheduler;
     int pageNum = 0;
     const int pageSize = 32;
 
-    //TO-DO
-    /*
-    * 1. Fix UI fleckreing during search
-    */
+    // We reserve here so much elements to prevent future allocation in a vector. In such way I fixed UI flickering on first search run.
+    // In either way program will consume abount 50 mb of ram, so we're just doing that earlier.
+    searchResults.reserve(300000);
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -74,21 +79,20 @@ int main() {
 
         UIBegin();
         {
-            ImGui::SetNextWindowPos(ImVec2(0, 0));
-            int displayW, displayH;
-            glfwGetFramebufferSize(window, &displayW, &displayH);
-            glViewport(0, 0, displayW, displayH);
-            ImGui::SetNextWindowSize(ImVec2(displayW, displayH));
+            SetFullscreenUI(window);
             ImGui::Begin("Searcher", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove);
             ImGui::InputText("Write here word you want to find", inputBuffer, INPUT_BUFFER_SIZE);
-            if (ImGui::Button("Search")) {
-                Search(searchResults, scheduler, dictionary, pageNum, inputBuffer);
+            if (ImGui::Button("Search") || isEnterPressed) {
+                isEnterPressed = false;
+                Search(searchResults, scheduler, dictionary, inputBuffer);
+                pageNum = 0;
             }
 
             if (!scheduler.IsSearchFinished()) {
                 ImGui::TextColored(ImVec4(1, 0, 1, 1), "Search in progress");
             }
 
+            // Here we draw "Next" and "Prev" buttons for pagination UI part. We draw them only if there are more search results than page size
             if (searchResults.size() > pageSize) {
                 if (ImGui::Button("Prev")) {
                     if (pageNum * pageSize - pageSize >= 0) {
@@ -104,6 +108,7 @@ int main() {
                 ImGui::Text("Page %d/%d", pageNum, searchResults.size() / pageSize);
             }
 
+            // Here we print search results to the screen with pagination
             ImGui::TextColored(ImVec4(1, 1, 0, 1), "Search results");
             ImGui::BeginChild("Scrolling");
             if (searchResults.size() <= pageSize) {
@@ -112,13 +117,16 @@ int main() {
                 }
             }
             else {
-                for (size_t i = pageNum * pageSize; i < pageSize + pageNum * pageSize; i++) {
-                    if (i >= searchResults.size()) break;
+                size_t upperBound = pageSize + pageNum * pageSize;
+                // To prevent out of bounds for vector
+                if (upperBound >= searchResults.size()) {
+                    upperBound = searchResults.size() - 1;
+                }
+                for (size_t i = pageNum * pageSize; i < upperBound; i++) {
                     ImGui::TextUnformatted(searchResults[i].c_str());
                 }
             }
             ImGui::EndChild();
-
             ImGui::End();
         }
         UIEnd(window);
@@ -127,7 +135,6 @@ int main() {
     }
 
     delete[] inputBuffer;
-    delete[] inputBufferCopy;
     Destroy();
     return 0;
 }

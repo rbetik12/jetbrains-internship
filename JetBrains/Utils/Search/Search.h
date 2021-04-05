@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_set>
 
+// This class is responsible for searching
 class Searcher {
 public:
     Searcher();

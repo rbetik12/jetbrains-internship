@@ -26,6 +26,7 @@ bool Searcher::Contains(std::string str, std::string& stringToSearch) {
 }
 
 void Searcher::SearchInBlock(int bytesToSearch, char* dictBlock, std::string& stringToSearch, std::vector<std::string>& results) {
+    // This loop clears block to avoid getting partly read strings. We will get it in the next block anyway
     for (int i = bytesToSearch; i >= 0; i--) {
         if (dictBlock[i] == '\n') break;
         else dictBlock[i] = '\0';
@@ -49,6 +50,7 @@ void Searcher::Search(std::vector<std::string>& results, std::string& stringToSe
     size_t readRes;
     stopSearch = false;
 
+    // Here we read dictionary file block by block
     while (!stopSearch) {
         for (size_t i = 0; i < memToAlloc; i += DICT_BLOCK_SIZE) {
             readRes = fread(dictBlocks + i, sizeof(char), DICT_BLOCK_SIZE, dictionary);

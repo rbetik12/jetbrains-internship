@@ -2,8 +2,9 @@
 #include <deque>
 #include <thread>
 #include "../Search/Search.h"
-#include "ThreadTask.h"
+#include "SchedulerTask.h"
 
+// This class schedules search operation to do it in a separate thread
 class TaskScheduler {
 public:
     TaskScheduler();
