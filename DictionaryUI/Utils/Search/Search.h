@@ -11,6 +11,6 @@ public:
     void StopSearch();
 private:
     bool Contains(std::string str, std::string& stringToSearch);
-    void SearchInBlock(int bytesToSearch, char* dictBlock, std::string& stringToSearch, std::vector<std::string>& results);
+    size_t SearchInBlock(int bytesToSearch, char* dictBlock, std::string& stringToSearch, std::vector<std::string>& results);
     bool stopSearch;
 };
