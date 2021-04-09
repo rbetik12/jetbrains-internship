@@ -11,11 +11,11 @@ void TriangleApp::Create(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) {
         isPresent = true;
 
         //Opens console for debug purpose. Mem leak!
-        /*FILE* fp;
+        FILE* fp;
         AllocConsole();
         freopen_s(&fp, "CONIN$", "r", stdin);
         freopen_s(&fp, "CONOUT$", "w", stdout);
-        freopen_s(&fp, "CONOUT$", "w", stderr);*/
+        freopen_s(&fp, "CONOUT$", "w", stderr);
     }
 }
 
@@ -188,6 +188,11 @@ LRESULT TriangleApp::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPA
     if (!app) return DefWindowProc(windowHandle, message, wParam, lParam);
 
     switch (message) {
+    case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE) {
+            ExitProcess(0);
+        }
+        return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
         app->SetAppStop(true);
