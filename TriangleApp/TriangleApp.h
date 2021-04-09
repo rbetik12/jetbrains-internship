@@ -4,7 +4,7 @@
 #include <memory>
 #include <windows.h>
 #include <d2d1.h>
-#include "TriangleGenerator.h"
+#include "ShapeGenerator.h"
 
 template <class T> void SafeRelease(T** ppT) {
     if (*ppT) {
@@ -38,10 +38,11 @@ private:
     uint32_t width, height;
     int xMousePos, yMousePos;
     bool shouldStop;
-    TriangleGenerator triangleGenerator;
+    ShapeGenerator shapeGenerator;
 // Direct2D stuff
 private:
     ID2D1Factory* d2dFactory;
     ID2D1HwndRenderTarget* renderTarget;
     ID2D1SolidColorBrush* brush;
+    ID2D1LinearGradientBrush* linearGradientBrush;
 };

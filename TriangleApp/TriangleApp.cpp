@@ -7,7 +7,7 @@ TriangleApp* TriangleApp::instance = nullptr;
 
 void TriangleApp::Create(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) {
     if (!isPresent) {
-        instance = new TriangleApp(hInstance, lpCmdLine, nCmdShow);
+           instance = new TriangleApp(hInstance, lpCmdLine, nCmdShow);
         isPresent = true;
 
         //Opens console for debug purpose. Mem leak!
@@ -88,6 +88,33 @@ void TriangleApp::InitializeD2D() {
     }
 
     renderTarget->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+
+
+    ID2D1GradientStopCollection* pGradientStops = NULL;
+
+    D2D1_GRADIENT_STOP gradientStops[2];
+    gradientStops[0].color = D2D1::ColorF(D2D1::ColorF::Blue, 1);
+    gradientStops[0].position = 0.0f;
+    gradientStops[1].color = D2D1::ColorF(D2D1::ColorF::Orange, 1);
+    gradientStops[1].position = 1.0f;
+
+    hr = renderTarget->CreateGradientStopCollection(
+        gradientStops,
+        2,
+        D2D1_GAMMA_2_2,
+        D2D1_EXTEND_MODE_CLAMP,
+        &pGradientStops
+    );
+
+    if (SUCCEEDED(hr)) {
+        hr = renderTarget->CreateLinearGradientBrush(
+            D2D1::LinearGradientBrushProperties(
+            D2D1::Point2F(0, 0),
+            D2D1::Point2F(150, 150)),
+            pGradientStops,
+            &linearGradientBrush
+        );
+    }
 }
 
 void TriangleApp::OnDraw() {
@@ -98,13 +125,16 @@ void TriangleApp::OnDraw() {
     D2D1_POINT_2F p1 = {renderTargetSize.width / 2.0f, 100.0f};
     D2D1_POINT_2F p2 = {renderTargetSize.width - 100.0f, renderTargetSize.height - 100.0f};
 
+    
     renderTarget->BeginDraw();
 
     renderTarget->Clear(D2D1::ColorF(37.0f / 256.0f, 133.0f / 256.0f, 75.0f / 256.0f, 1.0f));
 
-    renderTarget->DrawLine(p0, p1, brush);
-    renderTarget->DrawLine(p1, p2, brush);
-    renderTarget->DrawLine(p2, p0, brush);
+    auto stroke = ShapeGenerator::CreateStrokeStyle();
+    auto triangle = ShapeGenerator::GenerateTriangle(p0, p1, p2);
+
+    renderTarget->DrawGeometry(triangle.Get(), brush, 3.0f, stroke.Get());
+    renderTarget->FillGeometry(triangle.Get(), linearGradientBrush);
 
     hr = renderTarget->EndDraw();
 }
