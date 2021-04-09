@@ -3,14 +3,6 @@
 #include <iostream>
 #include <functional>
 
-template <class T> void SafeRelease(T** ppT) {
-    if (*ppT) {
-        (*ppT)->Release();
-        *ppT = NULL;
-    }
-}
-
-
 TriangleApp* TriangleApp::instance = nullptr;
 
 void TriangleApp::Create(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) {
@@ -153,6 +145,10 @@ void TriangleApp::SetMousePos(int x, int y) {
 
 void TriangleApp::SetAppStop(bool shouldStop) {
     this->shouldStop = shouldStop;
+}
+
+ID2D1Factory* TriangleApp::GetFactory() {
+    return d2dFactory;
 }
 
 LRESULT TriangleApp::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) {
