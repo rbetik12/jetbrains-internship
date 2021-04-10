@@ -7,7 +7,7 @@ TriangleApp* TriangleApp::instance = nullptr;
 
 void TriangleApp::Create(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) {
     if (!isPresent) {
-           instance = new TriangleApp(hInstance, lpCmdLine, nCmdShow);
+        instance = new TriangleApp(hInstance, lpCmdLine, nCmdShow);
         isPresent = true;
 
         //Opens console for debug purpose. Mem leak!
@@ -23,13 +23,14 @@ TriangleApp* TriangleApp::GetInstance() {
     return instance;
 }
 
-TriangleApp::TriangleApp(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) :  width(1280),
-                                                                                height(720),
-                                                                                shouldStop(false),
-                                                                                xMousePos(0),
-                                                                                yMousePos(0),
-                                                                                d2dFactory(nullptr),
-                                                                                renderTarget(nullptr) {
+TriangleApp::TriangleApp(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) : width(1280),
+height(720),
+shouldStop(false),
+xMousePos(0),
+yMousePos(0),
+d2dFactory(nullptr),
+renderTarget(nullptr) {
+    triangle = { {-1.0f, -1.0f}, {-1.0f, -1.0f}, {-1.0f, -1.0f} };
     WNDCLASSEX wc;
     ZeroMemory(&wc, sizeof(WNDCLASSEX));
 
@@ -121,20 +122,18 @@ void TriangleApp::OnDraw() {
     HRESULT hr;
     D2D1_SIZE_F renderTargetSize = renderTarget->GetSize();
     D2D1_RECT_F brushRect = D2D1::RectF(100.0f, 100.0f, renderTargetSize.width - 100.0f, renderTargetSize.height - 100.0f);
-    D2D1_POINT_2F p0 = {100.0f, renderTargetSize.height - 100.0f};
-    D2D1_POINT_2F p1 = {renderTargetSize.width / 2.0f, 100.0f};
-    D2D1_POINT_2F p2 = {renderTargetSize.width - 100.0f, renderTargetSize.height - 100.0f};
 
-    
     renderTarget->BeginDraw();
 
     renderTarget->Clear(D2D1::ColorF(37.0f / 256.0f, 133.0f / 256.0f, 75.0f / 256.0f, 1.0f));
 
-    auto stroke = ShapeGenerator::CreateStrokeStyle();
-    auto triangle = ShapeGenerator::GenerateTriangle(p0, p1, p2);
+    if (triangle.p0.x > 0.0f && triangle.p0.y > 0.0f) {
+        auto stroke = ShapeGenerator::CreateStrokeStyle();
+        auto triangleGeom = ShapeGenerator::GenerateTriangle(triangle.p0, triangle.p1, triangle.p2);
 
-    renderTarget->DrawGeometry(triangle.Get(), brush, 3.0f, stroke.Get());
-    renderTarget->FillGeometry(triangle.Get(), linearGradientBrush);
+        renderTarget->DrawGeometry(triangleGeom.Get(), brush, 3.0f, stroke.Get());
+        renderTarget->FillGeometry(triangleGeom.Get(), linearGradientBrush);
+    }
 
     hr = renderTarget->EndDraw();
 }
@@ -144,6 +143,9 @@ void TriangleApp::OnResize(uint32_t width, uint32_t height) {
         D2D1_SIZE_U size;
         size.width = width;
         size.height = height;
+
+        this->width = width;
+        this->height = height;
 
         renderTarget->Resize(size);
         OnDraw();
@@ -164,6 +166,9 @@ void TriangleApp::RunAppLoop() {
             TranslateMessage(&message);
             DispatchMessage(&message);
         }
+        if (DragDetect(windowHandle, { xMousePos, yMousePos })) {
+            std::cout << "Draging!" << std::endl;
+        }
         OnDraw();
     }
 }
@@ -177,6 +182,10 @@ void TriangleApp::SetAppStop(bool shouldStop) {
     this->shouldStop = shouldStop;
 }
 
+void TriangleApp::SetTriangleCoords(Triangle triangle) {
+    this->triangle = triangle;
+}
+
 ID2D1Factory* TriangleApp::GetFactory() {
     return d2dFactory;
 }
@@ -188,6 +197,22 @@ LRESULT TriangleApp::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPA
     if (!app) return DefWindowProc(windowHandle, message, wParam, lParam);
 
     switch (message) {
+    case WM_LBUTTONDOWN: 
+    {
+        int xMousePos, yMousePos;
+        xMousePos = GET_X_LPARAM(lParam);
+        yMousePos = GET_Y_LPARAM(lParam);
+        Triangle triangle;
+
+        triangle.p0.x = xMousePos;
+        triangle.p0.y = yMousePos;
+        triangle.p1.x = xMousePos + 30;
+        triangle.p1.y = yMousePos + 50;
+        triangle.p2.x = xMousePos + 60;
+        triangle.p2.y = yMousePos;
+        app->SetTriangleCoords(triangle);
+    }
+        return 0;
     case WM_KEYDOWN:
         if (wParam == VK_ESCAPE) {
             ExitProcess(0);
@@ -200,17 +225,16 @@ LRESULT TriangleApp::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPA
         return 0;
     case WM_MOUSEMOVE:
         int xMousePos, yMousePos;
-        xMousePos = LOWORD(lParam);
-        yMousePos = HIWORD(lParam);
+        xMousePos = GET_X_LPARAM(lParam);
+        yMousePos = GET_Y_LPARAM(lParam);
 
         app->SetMousePos(xMousePos, yMousePos);
 
         return 0;
-
     case WM_SIZE:
         uint32_t width = LOWORD(lParam);
         uint32_t height = HIWORD(lParam);
-  
+
         app->OnResize(width, height);
 
         return 0;

@@ -13,6 +13,10 @@ template <class T> void SafeRelease(T** ppT) {
     }
 }
 
+struct Triangle {
+    D2D1_POINT_2F p0, p1, p2;
+};
+
 class TriangleApp {
 public:
     static void Create(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow);
@@ -22,6 +26,7 @@ public:
     void RunAppLoop();
     void SetMousePos(int x, int y);
     void SetAppStop(bool shouldStop);
+    void SetTriangleCoords(Triangle triangle);
     ID2D1Factory* GetFactory();
 private:
     static LRESULT CALLBACK WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -39,6 +44,7 @@ private:
     int xMousePos, yMousePos;
     bool shouldStop;
     ShapeGenerator shapeGenerator;
+    Triangle triangle;
 // Direct2D stuff
 private:
     ID2D1Factory* d2dFactory;
