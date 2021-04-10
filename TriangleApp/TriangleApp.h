@@ -24,9 +24,7 @@ public:
 
     ~TriangleApp();
     void RunAppLoop();
-    void SetMousePos(int x, int y);
     void SetAppStop(bool shouldStop);
-    void SetTriangleCoords(Triangle triangle);
     ID2D1Factory* GetFactory();
 private:
     static LRESULT CALLBACK WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -35,13 +33,13 @@ private:
     void InitializeD2D();
     void OnDraw();
     void OnResize(uint32_t width, uint32_t height);
+    void MoveTriangle(int x, int y);
 private:
     static TriangleApp* instance;
     static bool isPresent;
 
     HWND windowHandle;
     uint32_t width, height;
-    int xMousePos, yMousePos;
     bool shouldStop;
     ShapeGenerator shapeGenerator;
     Triangle triangle;

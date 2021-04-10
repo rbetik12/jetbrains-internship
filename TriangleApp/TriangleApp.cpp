@@ -26,8 +26,6 @@ TriangleApp* TriangleApp::GetInstance() {
 TriangleApp::TriangleApp(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) : width(1280),
 height(720),
 shouldStop(false),
-xMousePos(0),
-yMousePos(0),
 d2dFactory(nullptr),
 renderTarget(nullptr) {
     triangle = { {-1.0f, -1.0f}, {-1.0f, -1.0f}, {-1.0f, -1.0f} };
@@ -152,6 +150,15 @@ void TriangleApp::OnResize(uint32_t width, uint32_t height) {
     }
 }
 
+void TriangleApp::MoveTriangle(int x, int y) {
+        triangle.p0.x = x;
+        triangle.p0.y = y;
+        triangle.p1.x = x + 30;
+        triangle.p1.y = y + 50;
+        triangle.p2.x = x + 60;
+        triangle.p2.y = y;
+}
+
 TriangleApp::~TriangleApp() {
     SafeRelease(&renderTarget);
     SafeRelease(&brush);
@@ -160,30 +167,42 @@ TriangleApp::~TriangleApp() {
 
 void TriangleApp::RunAppLoop() {
     MSG message;
+    bool prevDrag = false;
+    bool leftButtonClicked = false;
+    D2D1_POINT_2L mousePos = {0, 0};
 
     while (!shouldStop) {
         if (PeekMessage(&message, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&message);
             DispatchMessage(&message);
         }
-        if (DragDetect(windowHandle, { xMousePos, yMousePos })) {
-            std::cout << "Draging!" << std::endl;
+
+        GetCursorPos(&mousePos);
+
+        if ((GetKeyState(VK_LBUTTON) & 0x8000) != 0) {
+            leftButtonClicked = true;
         }
+        else {
+            leftButtonClicked = false;
+        }
+
+        if (DragDetect(windowHandle, { mousePos.x, mousePos.y })) {
+            prevDrag = true;
+            MoveTriangle(mousePos.x, mousePos.y);
+        }
+        else if (leftButtonClicked) {
+            if (!prevDrag) {
+                MoveTriangle(mousePos.x, mousePos.y);
+            }
+            prevDrag = false;
+        }
+
         OnDraw();
     }
 }
 
-void TriangleApp::SetMousePos(int x, int y) {
-    xMousePos = x;
-    yMousePos = y;
-}
-
 void TriangleApp::SetAppStop(bool shouldStop) {
     this->shouldStop = shouldStop;
-}
-
-void TriangleApp::SetTriangleCoords(Triangle triangle) {
-    this->triangle = triangle;
 }
 
 ID2D1Factory* TriangleApp::GetFactory() {
@@ -197,22 +216,6 @@ LRESULT TriangleApp::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPA
     if (!app) return DefWindowProc(windowHandle, message, wParam, lParam);
 
     switch (message) {
-    case WM_LBUTTONDOWN: 
-    {
-        int xMousePos, yMousePos;
-        xMousePos = GET_X_LPARAM(lParam);
-        yMousePos = GET_Y_LPARAM(lParam);
-        Triangle triangle;
-
-        triangle.p0.x = xMousePos;
-        triangle.p0.y = yMousePos;
-        triangle.p1.x = xMousePos + 30;
-        triangle.p1.y = yMousePos + 50;
-        triangle.p2.x = xMousePos + 60;
-        triangle.p2.y = yMousePos;
-        app->SetTriangleCoords(triangle);
-    }
-        return 0;
     case WM_KEYDOWN:
         if (wParam == VK_ESCAPE) {
             ExitProcess(0);
@@ -221,14 +224,6 @@ LRESULT TriangleApp::WndProc(HWND windowHandle, UINT message, WPARAM wParam, LPA
     case WM_DESTROY:
         PostQuitMessage(0);
         app->SetAppStop(true);
-
-        return 0;
-    case WM_MOUSEMOVE:
-        int xMousePos, yMousePos;
-        xMousePos = GET_X_LPARAM(lParam);
-        yMousePos = GET_Y_LPARAM(lParam);
-
-        app->SetMousePos(xMousePos, yMousePos);
 
         return 0;
     case WM_SIZE:
