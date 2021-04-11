@@ -9,13 +9,6 @@ void TriangleApp::Create(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) {
     if (!isPresent) {
         instance = new TriangleApp(hInstance, lpCmdLine, nCmdShow);
         isPresent = true;
-
-        //Opens console for debug purpose. Mem leak!
-        FILE* fp;
-        AllocConsole();
-        freopen_s(&fp, "CONIN$", "r", stdin);
-        freopen_s(&fp, "CONOUT$", "w", stdout);
-        freopen_s(&fp, "CONOUT$", "w", stderr);
     }
 }
 
@@ -23,12 +16,11 @@ TriangleApp* TriangleApp::GetInstance() {
     return instance;
 }
 
-TriangleApp::TriangleApp(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) : width(1280),
-height(720),
+TriangleApp::TriangleApp(HINSTANCE hInstance, LPSTR lpCmdLine, int nCmdShow) : width(1920),
+height(1080),
 shouldStop(false),
 d2dFactory(nullptr),
 renderTarget(nullptr) {
-    triangle = { {-1.0f, -1.0f}, {-1.0f, -1.0f}, {-1.0f, -1.0f} };
     WNDCLASSEX wc;
     ZeroMemory(&wc, sizeof(WNDCLASSEX));
 
