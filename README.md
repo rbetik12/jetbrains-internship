@@ -1,7 +1,7 @@
 | Task | Link | Demo video |
 | --- | ----------- | ------ |
-| Triangle app | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/TriangleApp) | [Video](https://youtu.be/oArTxtXO_EU) |
-| Dictionary search | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/DictionaryUI) | | 
+| Triangle app | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/TriangleApp) | OBS didn't want to record that :( |
+| Dictionary search | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/DictionaryUI) | [Video](https://youtu.be/oArTxtXO_EU) | 
 
 # Tested on
 
