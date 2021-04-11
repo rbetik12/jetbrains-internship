@@ -1,7 +1,7 @@
-| Task | Link |
-| --- | ----------- |
-| Triangle app | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/TriangleApp) |
-| Dictionary search | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/DictionaryUI) |
+| Task | Link | Demo video |
+| --- | ----------- | ------ |
+| Triangle app | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/TriangleApp) | [Video](https://youtu.be/oArTxtXO_EU) |
+| Dictionary search | [Here](https://github.com/rbetik12/jetbrains-internship/tree/master/DictionaryUI) | | 
 
 # Tested on
 
